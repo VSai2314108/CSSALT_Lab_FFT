@@ -2,7 +2,9 @@
 Default setup
 1. Clone repository from github into working directory
     git clone https://github.com/VSai2314108/FFT.git
-2. Create a virtual enviorment and install the requirements file 
+2. Create a virtual enviorment and install the requirements file
+    Given no errors the .fftproj virtual enviorment will autmatically be available
+    Otherwise
     create a virtual environment using mkvirtualenv [environment_name]
     workon [environment_name]
     pip install -r requirements.txt
