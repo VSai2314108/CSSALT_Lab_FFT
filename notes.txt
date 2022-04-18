@@ -1,0 +1,6 @@
+Default setup
+1. 
+
+
+pip3 install --global-option='build_ext' --global-option="-I$(brew --prefix)/include" --global-option="-L$(brew --prefix)/lib" pyaudio
+
