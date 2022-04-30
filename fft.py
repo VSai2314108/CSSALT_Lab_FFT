@@ -78,23 +78,28 @@ def drawTicks():
         graph.DrawLine((-3, y*offsetY), (3, y*offsetY))
 
 def drawAxesLabels():
-    graph.DrawText('kHz', (50, 10), color='black')
+    graph.DrawText('Time', (50, -5), color='black')
     graph.DrawText('Scaled DB', (-5, 50), color='black', angle=90)
 
 def drawFFT():
     global graphDB
     global graphAVG
-
-    # Not the most elegant implementation but gets the job done.
-    # Note that we are using rfft instead of plain fft, it uses half
-    # the data from pyAudio while preserving frequencies thus improving
-    # performance, you might also want to scale and normalize the fft data
-    # Here I am simply using hardcoded values/variables which is not ideal.
+    graphDB.append(float(np.amax(_VARS['audioData'])))
+    #if(len(graphDB)>=100):
+        #graphDB = graphDB[1:]
+    if(len(graphDB)==0 or sum(graphDB)==0):
+        graphAVG=100
+    else:
+        graphAVG = sum(graphDB)/len(graphDB)
 
     barStep = 100/BUCKETS  # Needed to fit the data into the plot.
     fft_data = np.fft.rfft(_VARS['audioData'])  # The proper fft calculation
     fft_data = np.absolute(fft_data)  # Get rid of negatives
-    fft_data = (50*fft_data)/np.amax(fft_data)  # normalize data to 0-1 range and scale by max(abs(y-axis))
+    if(np.amax(fft_data)!=0):
+        fft_data = (50*fft_data)/np.amax(fft_data)# normalize data to 0-1 range and scale by max(abs(y-axis))
+    else:
+        fft_data = (50*fft_data)
+    
     dpinB = int((CHUNK/2)/BUCKETS)
     #baseline
     global cb
@@ -117,13 +122,37 @@ def drawFFT():
     for i, x in enumerate(fft_data):
         if (counter == dpinB):
             #if(bucket >= SHIFTUP):
-               #graph.draw_rectangle(top_left=(bucket*barStep, acc/dpinB+50),
-                  # bottom_right=((bucket+1)*barStep, 50),
-                   #fill_color='black')
-            i=0
-            for val in graphDB:
-                graph.DrawCircle((i,(val/graphAVG)*50),1,fill_color='black',line_color='white')
-                i=i+1
+             #  graph.draw_rectangle(top_left=(bucket*barStep, acc/dpinB+50),
+             #     bottom_right=((bucket+1)*barStep, 50),
+             # 
+             # fill_color='black')
+            if(cb>bl):
+                i=0
+                totall = len(graphDB)
+                #print(graphDB)
+                if(totall>=100):
+                    for idx in range(totall-100,totall):
+                        if((i%10)==0):
+                            val = (graphDB[idx]/500)*50
+                            if (val>95):
+                                val = 95
+                            #graph.DrawCircle((i,(graphDB[idx]/500)*50),1,fill_color='black',line_color='white')
+                            graph.draw_rectangle(top_left=(i, val ),
+                                bottom_right=(i+10, 0),
+                                    fill_color='black')
+                        i=i+1
+                else:
+                    for idx in range(0,totall):
+                        if((i%10)==0):
+                            val = (graphDB[idx]/500)*50
+                            if (val>95):
+                                val = 95
+                            #graph.DrawCircle((i,(graphDB[idx]/graphAVG)*50),1,fill_color='black',line_color='white')
+                            graph.draw_rectangle(top_left=(i, val),
+                                    bottom_right=(i+10, 0),
+                                        fill_color='black')
+                        i=i+1
+
              
             #modify base or and data
             if(cb<bl):
@@ -195,8 +224,8 @@ def stop():
         _VARS['stream'].stop_stream()
         _VARS['stream'].close()
         _VARS['window']['-PROG-'].update(0)
-        _VARS['window'].FindElement('Stop').Update(disabled=True)
-        _VARS['window'].FindElement('Listen').Update(disabled=False)
+        _VARS['window'].find_element('Stop').Update(disabled=True)
+        _VARS['window'].find_element('Listen').Update(disabled=False)
 
 
 def callback(in_data, frame_count, time_info, status):
@@ -205,8 +234,8 @@ def callback(in_data, frame_count, time_info, status):
 
 
 def listen():
-    _VARS['window'].FindElement('Stop').Update(disabled=False)
-    _VARS['window'].FindElement('Listen').Update(disabled=True)
+    _VARS['window'].find_element('Stop').Update(disabled=False)
+    _VARS['window'].find_element('Listen').Update(disabled=True)
     _VARS['stream'] = pAud.open(format=pyaudio.paInt16,
                                 channels=1,
                                 rate=RATE,
@@ -216,29 +245,20 @@ def listen():
     _VARS['stream'].start_stream()
     
 def updateUI():
-    global graphDB
-    global graphAVG
-    # Uodate volumne meter
-    _VARS['window']['-PROG-'].update(np.amax(_VARS['audioData']))
-    graphDB.append(float(np.amax(_VARS['audioData'])))
-    if(len(graphDB)>=100):
-        graphDB = graphDB[1:]
-    if(len(graphDB)==0 or sum(graphDB)==0):
-        graphAVG=100
-    else:
-        graphAVG = sum(graphDB)/len(graphDB)
+    
     # Redraw plot
+    _VARS['window']['-PROG-'].update(np.amax(_VARS['audioData']))
     graph.erase()
     drawAxis()
-    #drawTicks()
-    #drawAxesLabels()
+    drawTicks()
+    drawAxesLabels()
     drawFFT()
     alarm()
 
 # INIT:
 drawAxis()
-#drawTicks()
-#drawAxesLabels()
+drawTicks()
+drawAxesLabels()
 
 # MAIN LOOP
 while True:

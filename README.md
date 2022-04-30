@@ -5,11 +5,12 @@ Default setup
 2. Create a virtual enviorment and install the requirements file
     Given no errors the .fftproj virtual enviorment will autmatically be available
     Otherwise
-    create a virtual environment using mkvirtualenv [environment_name]
-    workon [environment_name]
+    create a virtual environment python3 -m venv --system-site-packages
+    source [path] - /Users/vsai23/Workspace/FFT/fftproj/bin/activate]
     pip install -r requirements.txt
 3. If there is a pyaudio installation error due to homebrew run the below command 
     pip3 install --global-option='build_ext' --global-option="-I$(brew --prefix)/include" --global-option="-L$(brew --prefix)/lib" pyaudio
+    python3 -m pip install pyaudio --global-option="build_ext" --global-option="-I/opt/homebrew/include" --global-option="-L/opt/homebrew/lib"
 4. Reach out to me at somasundaramv@ufl.edu if there is any further challenges
 
 Testing Information 
