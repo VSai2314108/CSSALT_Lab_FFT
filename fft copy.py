@@ -66,16 +66,16 @@ def drawAxis():
 
 def drawTicks():
 
-    divisionsX = BUCKETS
+    divisionsX = 1
     multi = int(RATE/divisionsX)
     offsetX = int(100/divisionsX)
 
     divisionsY = 10
     offsetY = int(100/divisionsY)
 
-    for x in range(0, divisionsX+1):
+    for x in range(0, 21):
         # print('x:', x)
-        graph.DrawLine((x*offsetX, -3), (x*offsetX, 3))
+        graph.DrawLine((x*5, -3), (x*5, 3))
         graph.DrawText(int((x*multi)), (x*offsetX, -10), color='black')
 
     for y in range(0, divisionsY+1):
@@ -86,17 +86,7 @@ def drawAxesLabels():
     graph.DrawText('Scaled DB', (-5, 50), color='black', angle=90)
 
 def drawFFT():
-    global graphDB
-    global graphAVG
-    graphDB.append(float(np.amax(_VARS['audioData'])))
-    #if(len(graphDB)>=100):
-        #graphDB = graphDB[1:]
-    if(len(graphDB)==0 or sum(graphDB)==0):
-        graphAVG=100
-    else:
-        graphAVG = sum(graphDB)/len(graphDB)
-
-    barStep = 100/BUCKETS  # Needed to fit the data into the plot.
+    ##################### FFT Calculations ###########################
     fft_data = np.fft.rfft(_VARS['audioData'])  # The proper fft calculation
     fft_data = np.absolute(fft_data)  # Get rid of negatives
     if(np.amax(fft_data)!=0):
@@ -105,68 +95,21 @@ def drawFFT():
         fft_data = (50*fft_data)
     
     dpinB = int((CHUNK/2)/BUCKETS)
-    #baseline
-    global cb
-    global rData
-    global bData
-    global rl
-    global bl
-    global bMax
-    global rMax
+    global cb, rData, bData, rl, bl, bMax, rMax
+    counter, acc, bucket = 0, 0, 0
     
-    #bucket and display
-    counter = 0
-    acc = 0
-    bucket=0
-    
-    #counter operations
+    ################### Bucket Allocations and updates to bucket ###################
     if(cb%rl==0):
         rData = [0]*(BUCKETS+1)
         rMax = 0
     for i, x in enumerate(fft_data):
         if (counter == dpinB):
-            #if(bucket >= SHIFTUP):
-             #  graph.draw_rectangle(top_left=(bucket*barStep, acc/dpinB+50),
-             #     bottom_right=((bucket+1)*barStep, 50),
-             # 
-             # fill_color='black')
-            if(cb>bl):
-                i=0
-                totall = len(graphDB)
-                #print(graphDB)
-                if(totall>=100):
-                    for idx in range(totall-100,totall):
-                        if((i%10)==0):
-                            val = (graphDB[idx]/500)*50
-                            if (val>95):
-                                val = 95
-                            #graph.DrawCircle((i,(graphDB[idx]/500)*50),1,fill_color='black',line_color='white')
-                            graph.draw_rectangle(top_left=(i, val ),
-                                bottom_right=(i+10, 0),
-                                    fill_color='black')
-                        i=i+1
-                else:
-                    for idx in range(0,totall):
-                        if((i%10)==0):
-                            val = (graphDB[idx]/500)*50
-                            if (val>95):
-                                val = 95
-                            #graph.DrawCircle((i,(graphDB[idx]/graphAVG)*50),1,fill_color='black',line_color='white')
-                            graph.draw_rectangle(top_left=(i, val),
-                                    bottom_right=(i+10, 0),
-                                        fill_color='black')
-                        i=i+1
-
-             
             #modify base or and data
             if(cb<bl):
                 bData[bucket]=bData[bucket]+((acc/dpinB)/bl)
                 bMax += ((acc/dpinB)/bl)
             rData[bucket]=(rData[bucket]+((acc/dpinB)/rl))
-            rMax += ((acc/dpinB)/rl)
-
-                
-           #increment the bucket variables     
+            rMax += ((acc/dpinB)/rl)   
             counter = 1
             acc = x
             bucket +=1
@@ -176,6 +119,29 @@ def drawFFT():
     myState = _VARS['window']['Stop']
     if(str(myState.Widget['state']) == 'normal'):
         cb+=1
+    
+    #################### Adding max decibels to graph DB #######################
+    global graphDB
+    graphDB.append(float(np.amax(_VARS['audioData'])))
+    if(len(graphDB)>=(1000)):
+        graphDB = graphDB[1:]
+    """ if(len(graphDB)==0 or sum(graphDB)==0):
+        graphAVG=100
+    else:
+        graphAVG = sum(graphDB)/len(graphDB) """
+        
+    ################ Draw Points on Graph #######################
+    j = 0
+    print(graph.get_size()[0])
+    for i in range(len(graphDB)-10):
+        if(i%10==0):
+            val1 = int((graphDB[i]/5000)*50)
+            val2 = int((graphDB[i+10]/5000)*50)
+            val1, val2 = min(val1,95), min(val2,95)
+            graph.draw_line((j,val1),(j+1,val2))
+            j=j+1
+        
+
 
 #Alarm function 
 def alarm():
@@ -249,7 +215,6 @@ def listen():
     _VARS['stream'].start_stream()
     
 def updateUI():
-    
     # Redraw plot
     _VARS['window']['-PROG-'].update(np.amax(_VARS['audioData']))
     graph.erase()
