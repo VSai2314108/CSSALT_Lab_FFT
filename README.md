@@ -1,5 +1,6 @@
-# FFT
-Default setup
+# CSSALT_LAB_FFT Python-Version
+
+## Default setup
 1. Clone repository from github into working directory
     git clone https://github.com/VSai2314108/FFT.git
 2. Create a virtual enviorment and install the requirements file
@@ -13,5 +14,5 @@ Default setup
     python3 -m pip install pyaudio --global-option="build_ext" --global-option="-I/opt/homebrew/include" --global-option="-L/opt/homebrew/lib"
 4. Reach out to me at somasundaramv@ufl.edu if there is any further challenges
 
-Testing Information 
-
+## About
+The project above is an attempt at automating of a year's worth of research pertaining to the impact of air embolisms on the frequency and volume of the heart beat. Feel free to dive into the code and explore!
